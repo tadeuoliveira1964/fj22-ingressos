@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
+import br.com.caelum.ingresso.business.GerenciadorDeSessao;
 import br.com.caelum.ingresso.dao.FilmeDao;
 import br.com.caelum.ingresso.dao.SalaDao;
 import br.com.caelum.ingresso.dao.SessaoDao;
@@ -46,19 +47,18 @@ public class SessaoController {
 	@PostMapping("admin/sessao")
 	@Transactional
 	public ModelAndView salva(@Valid SessaoForm form, BindingResult result){
-		
 		if(result.hasErrors())return form(form.getSalaId(), form);
-		
-		ModelAndView mav = new ModelAndView("redirect:/admin/sala/"+form.getSalaId()+"/sessoes");
 		
 		Sessao sessao = form.toSessao(salaDao, filmeDao);
 		
-		sessaoDao.save(sessao);
-	
-		return mav;
+		GerenciadorDeSessao gerenciador = new GerenciadorDeSessao(sessaoDao.buscaSessoesDaSala(sessao.getSala()));
+		
+		if(gerenciador.cabe(sessao)){
+			sessaoDao.save(sessao);
+			return new ModelAndView("redirect:/admin/sala/"+form.getSalaId()+"/sessoes");
+		}
+			
+		return 	form(form.getSalaId(),	form);
 	}
-	
-	
-	
 	
 }
