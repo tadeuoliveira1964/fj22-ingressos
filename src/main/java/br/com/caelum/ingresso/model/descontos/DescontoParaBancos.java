@@ -7,7 +7,7 @@ public class DescontoParaBancos implements Desconto{
 	@Override
 	public BigDecimal aplicarDescontoSobre(BigDecimal precoOriginal) {
 
-		return precoOriginal.divide(trintaPorCentoSobre(precoOriginal));
+		return precoOriginal.subtract(trintaPorCentoSobre(precoOriginal));
 	}
 
 	private BigDecimal trintaPorCentoSobre(BigDecimal precoOriginal){
