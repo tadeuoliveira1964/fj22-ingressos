@@ -10,13 +10,16 @@ import javax.persistence.ManyToOne;
 @Entity
 public class Sessao {
 
-	@Id @GeneratedValue	
+	@Id 
+	@GeneratedValue	
 	private Integer id;
 	
 	@ManyToOne
 	private Sala sala;
+	
 	@ManyToOne
 	private Filme filme;
+	
 	private LocalTime horario;
 	
 	/**
@@ -48,7 +51,13 @@ public class Sessao {
 	public void setHorario(LocalTime horario) {
 		this.horario = horario;
 	}
-	
-	
-	
+
+	public Integer getId() {
+		return id;
+	}
+
+	public void setId(Integer id) {
+		this.id = id;
+	}
+		
 }

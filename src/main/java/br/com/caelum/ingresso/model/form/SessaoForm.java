@@ -2,6 +2,10 @@ package br.com.caelum.ingresso.model.form;
 
 import java.time.LocalTime;
 
+import javax.validation.constraints.NotNull;
+
+import org.springframework.format.annotation.DateTimeFormat;
+
 import br.com.caelum.ingresso.dao.FilmeDao;
 import br.com.caelum.ingresso.dao.SalaDao;
 import br.com.caelum.ingresso.model.Filme;
@@ -10,15 +14,36 @@ import br.com.caelum.ingresso.model.Sessao;
 
 public class SessaoForm {
 
+	private Integer id;
+	
+	@NotNull
 	private Integer salaId;
+	
+	@NotNull
 	private Integer filmeId;
+	
+	@DateTimeFormat(pattern="HH:mm")
+	@NotNull
 	private LocalTime horario;
 	
 	public Sessao toSessao(SalaDao salaDao, FilmeDao filmeDao){
 		Sala sala = salaDao.findOne(salaId);
 		Filme filme = filmeDao.findOne(filmeId);
 		
-		return new Sessao(sala,filme, horario);
+		Sessao sessao = new Sessao(sala,filme, horario);
+		sessao.setId(id);
+		
+		return sessao;
+	}
+
+	
+	public Integer getId() {
+		return id;
+	}
+
+
+	public void setId(Integer id) {
+		this.id = id;
 	}
 
 	public Integer getSalaId() {
