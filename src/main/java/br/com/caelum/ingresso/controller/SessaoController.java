@@ -1,5 +1,7 @@
 package br.com.caelum.ingresso.controller;
 
+import java.util.Optional;
+
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,56 +20,76 @@ import br.com.caelum.ingresso.business.GerenciadorDeSessao;
 import br.com.caelum.ingresso.dao.FilmeDao;
 import br.com.caelum.ingresso.dao.SalaDao;
 import br.com.caelum.ingresso.dao.SessaoDao;
+import br.com.caelum.ingresso.model.ImagemCapa;
 import br.com.caelum.ingresso.model.Sessao;
 import br.com.caelum.ingresso.model.form.SessaoForm;
+import br.com.caelum.ingresso.rest.ImdbClient;
 
 @Controller
 public class SessaoController {
-	
+
 	@Autowired
 	private SalaDao salaDao;
-	
+
 	@Autowired
 	private FilmeDao filmeDao;
-	
+
 	@Autowired
 	private SessaoDao sessaoDao;
 	
+	@Autowired
+	private ImdbClient client;
+
 	@GetMapping("/admin/sessao")
-	public ModelAndView form(@RequestParam("salaId") Integer idSala, SessaoForm form){
-		
+	public ModelAndView form(@RequestParam("salaId") Integer idSala, SessaoForm form) {
+
 		form.setSalaId(idSala);
-		
+
 		ModelAndView mav = new ModelAndView("sessao/sessao");
-		
-		mav.addObject("sala", salaDao.findOne(idSala) );
+
+		mav.addObject("sala", salaDao.findOne(idSala));
 		mav.addObject("filmes", filmeDao.findAll());
 		mav.addObject("form", form);
-		
+
 		return mav;
 	}
 
 	@PostMapping("admin/sessao")
 	@Transactional
-	public ModelAndView salva(@Valid SessaoForm form, BindingResult result){
-		if(result.hasErrors())return form(form.getSalaId(), form);
-		
+	public ModelAndView salva(@Valid SessaoForm form, BindingResult result) {
+		if (result.hasErrors())
+			return form(form.getSalaId(), form);
+
 		Sessao sessao = form.toSessao(salaDao, filmeDao);
-		
+
 		GerenciadorDeSessao gerenciador = new GerenciadorDeSessao(sessaoDao.buscaSessoesDaSala(sessao.getSala()));
-		
-		if(gerenciador.cabe(sessao)){
+
+		if (gerenciador.cabe(sessao)) {
 			sessaoDao.save(sessao);
-			return new ModelAndView("redirect:/admin/sala/"+form.getSalaId()+"/sessoes");
+			return new ModelAndView("redirect:/admin/sala/" + form.getSalaId() + "/sessoes");
 		}
-		return 	form(form.getSalaId(),	form);
+		return form(form.getSalaId(), form);
 	}
-	
+
 	@DeleteMapping("/admin/sessao/{id}")
 	@ResponseBody
 	@Transactional
-	public void delete(@PathVariable("id") Integer id){
-	    sessaoDao.delete(id);
+	public void delete(@PathVariable("id") Integer id) {
+		sessaoDao.delete(id);
 	}
-	
+
+	@GetMapping("/sessao/{id}/lugares")
+	public ModelAndView lugaresNaSessao(@PathVariable("id") Integer sessaoId) {
+		ModelAndView modelAndView = new ModelAndView("sessao/lugares");
+		
+		Sessao sessao = sessaoDao.findOne(sessaoId);
+		
+		Optional<ImagemCapa> imagemCapa = client.request(sessao.getFilme(),	ImagemCapa.class);
+		
+		modelAndView.addObject("sessao", sessao);
+		modelAndView.addObject("imagemCapa",	imagemCapa.orElse(new	ImagemCapa()));
+		
+		return modelAndView;
+	}
+
 }
